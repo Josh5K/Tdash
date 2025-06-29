@@ -2,6 +2,8 @@
 
 A powerful CLI tool that generates static HTML dashboards for Terraform and OpenTofu repositories. Get instant insights into your infrastructure code with a beautiful, self-contained HTML report.
 
+https://josh5k.github.io/Tdash/
+
 ## Features
 
 - **Provider Analysis**: View all providers used across your Terraform/OpenTofu configuration
