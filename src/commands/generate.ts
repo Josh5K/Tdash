@@ -23,8 +23,8 @@ export async function generateDashboard(path: string, options: GenerateOptions):
     // Generate the static dashboard
     const htmlContent = await generateStaticDashboard(terraformPath);
     
-    // Determine output file path (default: docs/tdash-dashboard.html)
-    let outputPath = options.output || join(process.cwd(), 'docs', 'tdash-dashboard.html');
+    // Determine output file path. By default we will write to docs/index.html to make it easier to deploy to github pages.
+    let outputPath = options.output || join(process.cwd(), 'docs', 'index.html');
     outputPath = resolve(outputPath);
     const outputDir = dirname(outputPath);
     if (!existsSync(outputDir)) {
@@ -60,7 +60,7 @@ export function registerGenerateCommand(program: Command): void {
     .command('generate <path>')
     .description('Generate a static HTML dashboard for Terraform/OpenTofu repository')
     .option('--browser', 'Open browser automatically')
-    .option('-o, --output <file>', 'Output file path for static HTML (default: docs/tdash-dashboard.html)')
+    .option('-o, --output <file>', 'Output file path for static HTML (default: docs/index.html)')
     .action(async (path: string, options: GenerateOptions) => {
       await generateDashboard(path, options);
     });
