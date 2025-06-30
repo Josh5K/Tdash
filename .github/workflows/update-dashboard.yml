@@ -39,7 +39,7 @@ jobs:
         mkdir -p docs
         
         # Generate the dashboard
-        node dist/index.js generate . --output docs/index.html
+        node dist/index.js generate ./example --output docs/index.html
 
     - name: Check for changes
       id: git-check
