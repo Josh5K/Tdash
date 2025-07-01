@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getTerraformCommand } from '../utils/terraform-command';
 
 const execAsync = promisify(exec);
 
@@ -32,8 +33,10 @@ export class StateDriftDetector {
     }
 
     try {
+      const terraformCmd = await getTerraformCommand();
+      
       // Switch to the workspace
-      await execAsync(`terraform workspace select ${workspace}`, {
+      await execAsync(`${terraformCmd.command} workspace select ${workspace}`, {
         cwd: this.terraformPath,
         timeout: 10000 // 10 second timeout
       });
@@ -41,7 +44,7 @@ export class StateDriftDetector {
       // Run terraform plan with timeout
       // We use exec instead of execAsync to get the exit code
       const child_process = require('child_process');
-      const planResult = child_process.spawnSync('terraform', ['plan', '-detailed-exitcode', '-lock=false'], {
+      const planResult = child_process.spawnSync(terraformCmd.command, ['plan', '-detailed-exitcode', '-lock=false'], {
         cwd: this.terraformPath,
         encoding: 'utf-8',
         timeout: 60000
@@ -77,7 +80,7 @@ export class StateDriftDetector {
     } catch (error: any) {
       let errorMessage = 'Failed to check drift';
       if (error.code === 'ETIMEDOUT') {
-        errorMessage = 'Drift check timed out - Terraform plan took too long';
+        errorMessage = 'Drift check timed out - Terraform/OpenTofu plan took too long';
       } else if (error.stderr) {
         errorMessage = `Drift check failed: ${error.stderr}`;
       } else if (error.message) {

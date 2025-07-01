@@ -12,11 +12,14 @@ https://josh5k.github.io/Tdash/
 - **Workspace Management**: Monitor multiple workspaces and their states
 - **State Drift Detection**: Automatic plan execution to detect configuration drift
 - **Static HTML Output**: Generate self-contained HTML files that can be shared or hosted anywhere
+- **Multi-Tool Support**: Automatically detects and works with both Terraform and OpenTofu
 
 ## Prerequisites
 
 - Node.js 16 or higher
 - Terraform or OpenTofu installed and accessible in PATH
+  - TDash automatically detects and uses OpenTofu (`tofu`) if available, otherwise falls back to Terraform (`terraform`)
+  - OpenTofu is preferred when both are installed
 - `hcl2json` binary (see installation instructions below)
 
 ### Installing hcl2json
@@ -145,6 +148,16 @@ Run with verbose logging:
 ```bash
 DEBUG=* node dist/index.js generate
 ```
+
+## Terraform/OpenTofu Detection
+
+TDash automatically detects which tool is available on your system:
+
+1. **OpenTofu Priority**: If OpenTofu (`tofu`) is available, it will be used first
+2. **Terraform Fallback**: If OpenTofu is not available, Terraform (`terraform`) will be used
+3. **Version Detection**: The tool will display which version is being used when generating dashboards
+
+You can see which tool is being used in the console output when running the generate command. The detection is cached for performance, but you can clear the cache by restarting the CLI.
 
 ## License
 

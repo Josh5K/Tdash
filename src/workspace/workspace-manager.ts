@@ -1,5 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getTerraformCommand } from '../utils/terraform-command';
 
 const execAsync = promisify(exec);
 
@@ -18,7 +19,8 @@ export class WorkspaceManager {
 
   async getWorkspaces(): Promise<Workspace[]> {
     try {
-      const { stdout } = await execAsync('terraform workspace list', {
+      const terraformCmd = await getTerraformCommand();
+      const { stdout } = await execAsync(`${terraformCmd.command} workspace list`, {
         cwd: this.terraformPath
       });
 
@@ -47,7 +49,8 @@ export class WorkspaceManager {
 
   async getCurrentWorkspace(): Promise<string | null> {
     try {
-      const { stdout } = await execAsync('terraform workspace show', {
+      const terraformCmd = await getTerraformCommand();
+      const { stdout } = await execAsync(`${terraformCmd.command} workspace show`, {
         cwd: this.terraformPath
       });
       return stdout.trim();
@@ -59,7 +62,8 @@ export class WorkspaceManager {
 
   async switchWorkspace(name: string): Promise<boolean> {
     try {
-      await execAsync(`terraform workspace select ${name}`, {
+      const terraformCmd = await getTerraformCommand();
+      await execAsync(`${terraformCmd.command} workspace select ${name}`, {
         cwd: this.terraformPath
       });
       return true;
@@ -71,7 +75,8 @@ export class WorkspaceManager {
 
   async createWorkspace(name: string): Promise<boolean> {
     try {
-      await execAsync(`terraform workspace new ${name}`, {
+      const terraformCmd = await getTerraformCommand();
+      await execAsync(`${terraformCmd.command} workspace new ${name}`, {
         cwd: this.terraformPath
       });
       return true;
