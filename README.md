@@ -13,6 +13,7 @@ https://josh5k.github.io/Tdash/
 - **State Drift Detection**: Automatic plan execution to detect configuration drift
 - **Static HTML Output**: Generate self-contained HTML files that can be shared or hosted anywhere
 - **Multi-Tool Support**: Automatically detects and works with both Terraform and OpenTofu
+- **Datadog Integration**: Send state drift metrics to Datadog for monitoring and alerting
 
 ## Prerequisites
 
@@ -90,8 +91,11 @@ node dist/index.js generate --browser
 ### Commands
 
 - `tdash generate [path]` - Generate a static HTML dashboard for the specified Terraform/OpenTofu repository
-- `tdash generate --output <file>` - Specify custom output file path (default: docs/tdash-dashboard.html)
+- `tdash generate --output <file>` - Specify custom output file path (default: docs/index.html)
 - `tdash generate --browser` - Automatically open the browser after generation
+- `tdash generate --datadog` - Enable Datadog metrics sending (HTTP API - no agent required)
+- `tdash generate --repository <name>` - Set repository name for metrics tagging
+- `tdash generate --environment <env>` - Set environment name for metrics tagging
 
 ## Dashboard Features
 
@@ -158,6 +162,75 @@ TDash automatically detects which tool is available on your system:
 3. **Version Detection**: The tool will display which version is being used when generating dashboards
 
 You can see which tool is being used in the console output when running the generate command. The detection is cached for performance, but you can clear the cache by restarting the CLI.
+
+## Datadog Integration
+
+TDash can send state drift metrics to Datadog for monitoring and alerting via HTTP API calls. This feature helps you track infrastructure drift across your Terraform/OpenTofu workspaces without requiring a local Datadog agent.
+
+### Configuration
+
+#### Environment Variables
+```bash
+export DD_API_KEY=your-datadog-api-key
+export DD_APP_KEY=your-datadog-app-key
+export DD_SITE=datadoghq.com  # or datadoghq.eu for EU
+```
+
+#### Command Line Options
+```bash
+# Basic usage with Datadog metrics
+tdash generate /path/to/repo --datadog
+
+# With custom configuration
+tdash generate /path/to/repo \
+  --datadog \
+  --datadog-site datadoghq.com \
+  --datadog-prefix "tdash." \
+  --datadog-tags "team:platform,project:infrastructure" \
+  --repository "my-terraform-repo" \
+  --environment "production"
+```
+
+### Metrics Sent
+
+#### Workspace-Level Metrics
+- `tdash.state_drift.has_drift` - Boolean gauge (0/1) indicating if workspace has drift
+- `tdash.state_drift.add_count` - Number of resources to add
+- `tdash.state_drift.change_count` - Number of resources to change
+- `tdash.state_drift.destroy_count` - Number of resources to destroy
+- `tdash.state_drift.total_changes` - Total number of pending changes
+
+#### Repository-Level Metrics
+- `tdash.repository.total_workspaces` - Total number of workspaces
+- `tdash.repository.workspaces_with_drift` - Number of workspaces with drift
+- `tdash.repository.total_pending_changes` - Total pending changes across all workspaces
+- `tdash.repository.drift_percentage` - Percentage of workspaces with drift
+
+#### Events
+- **Terraform State Drift Detected** - Warning event when drift is detected in any workspace
+
+### Tags
+All metrics are tagged with:
+- `workspace:<workspace_name>` - Individual workspace name
+- `repository:<repository_name>` - Repository name (if provided)
+- `environment:<environment>` - Environment name (if provided)
+- Custom tags (if provided via `--datadog-tags`)
+
+### Example Datadog Dashboard Queries
+
+```sql
+# Workspaces with drift
+avg:tdash.state_drift.has_drift{*} by {workspace}
+
+# Total pending changes by workspace
+sum:tdash.state_drift.total_changes{*} by {workspace}
+
+# Repository drift percentage
+avg:tdash.repository.drift_percentage{*}
+
+# Workspaces with most changes
+top(10, sum:tdash.state_drift.total_changes{*} by {workspace})
+```
 
 ## License
 

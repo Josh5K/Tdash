@@ -12,23 +12,29 @@
     "dev": "ts-node src/index.ts",
     "test": "jest"
   },
-  "keywords": ["terraform", "opentofu", "cli", "dashboard", "visualization"],
+  "keywords": [
+    "terraform",
+    "opentofu",
+    "cli",
+    "dashboard",
+    "visualization"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "commander": "^11.1.0",
-    "open": "^9.1.0",
-    "glob": "^10.3.10",
     "chalk": "^4.1.2",
-    "ora": "^5.4.1",
-    "node-ssh": "^13.1.0"
+    "commander": "^11.1.0",
+    "glob": "^10.3.10",
+    "node-ssh": "^13.1.0",
+    "open": "^9.1.0",
+    "ora": "^5.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
     "@types/glob": "^8.1.0",
-    "typescript": "^5.3.2",
-    "ts-node": "^10.9.1",
+    "@types/jest": "^29.5.8",
+    "@types/node": "^20.10.0",
     "jest": "^29.7.0",
-    "@types/jest": "^29.5.8"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
   }
-} 
+}
