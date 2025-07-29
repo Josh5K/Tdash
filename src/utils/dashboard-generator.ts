@@ -1,8 +1,26 @@
 import { TerraformAnalyzer } from '../analyzer/terraform-analyzer';
 import { WorkspaceManager } from '../workspace/workspace-manager';
 import { StateDriftDetector } from '../drift/state-drift-detector';
+import { DatadogMetricsService, DriftMetrics } from './datadog-metrics';
 
-export async function generateStaticDashboard(terraformPath: string): Promise<string> {
+export interface DashboardOptions {
+  enableDatadogMetrics?: boolean;
+  datadogConfig?: {
+    host?: string;
+    port?: number;
+    prefix?: string;
+    tags?: string[];
+    apiKey?: string;
+    appKey?: string;
+  };
+  repository?: string;
+  environment?: string;
+}
+
+export async function generateStaticDashboard(
+  terraformPath: string, 
+  options: DashboardOptions = {}
+): Promise<string> {
   const analyzer = new TerraformAnalyzer(terraformPath);
   const workspaceManager = new WorkspaceManager(terraformPath);
   const driftDetector = new StateDriftDetector(terraformPath);
@@ -31,7 +49,44 @@ export async function generateStaticDashboard(terraformPath: string): Promise<st
     })
   );
 
+  // Send Datadog metrics if enabled
+  if (options.enableDatadogMetrics) {
+    await sendDatadogMetrics(driftResults, options);
+  }
+
   return generateHTML(providers, modules, resources, workspaces, driftResults);
+}
+
+async function sendDatadogMetrics(driftResults: any[], options: DashboardOptions): Promise<void> {
+  try {
+    const datadogService = new DatadogMetricsService(options.datadogConfig);
+    
+    if (!datadogService.isConfigured()) {
+      console.warn('Datadog metrics not configured, skipping metrics send');
+      return;
+    }
+
+    // Convert drift results to metrics format
+    const metrics: DriftMetrics[] = driftResults.map(result => ({
+      workspace: result.workspace,
+      hasDrift: result.hasDrift,
+      addCount: result.changes.add,
+      changeCount: result.changes.change,
+      destroyCount: result.changes.destroy,
+      totalChanges: result.changes.add + result.changes.change + result.changes.destroy,
+      repository: options.repository,
+      environment: options.environment
+    }));
+
+    // Send individual workspace metrics
+    await datadogService.sendBulkDriftMetrics(metrics);
+    
+    // Send repository summary metrics
+    await datadogService.sendRepositorySummaryMetrics(metrics, options.repository);
+    
+  } catch (error) {
+    console.warn('Failed to send Datadog metrics:', error);
+  }
 }
 
 function generateHTML(
